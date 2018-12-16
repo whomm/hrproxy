@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"./httptool"
+	"github.com/whomm/hrproxy/httptool"
 )
 
 func main() {
