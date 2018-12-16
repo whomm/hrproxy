@@ -3,9 +3,9 @@
 A http reverse proxy with qps limitation by uri pattern
 
 ## Versions
-
+    1. 第一个版本还没写完。。。
 ## Five Minute Tutorial
-    ```shell
+    ```bash
     ./hrproxy -b192.168.0.1:8091,192.168.0.2:8091 -l127.0.0.1:80 --limit='*\/_bulk',90
     ```
 ## Features
