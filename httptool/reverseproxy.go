@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/didip/tollbooth"
+	"github.com/didip/tollbooth/limiter"
 )
 
 func NewServer(add string, backservice string) *LServeMux {
@@ -20,6 +21,23 @@ func NewServer(add string, backservice string) *LServeMux {
 		panic(err)
 	}
 	return &LServeMux{rp: rpx, add: add}
+}
+
+// LimitHandler is a middleware that performs rate-limiting given http.Handler struct.
+func LimitHandler(path string, lmt *limiter.Limiter, next http.Handler) http.Handler {
+	middle := func(w http.ResponseWriter, r *http.Request) {
+		if lmt.LimitReached(path) {
+			lmt.ExecOnLimitReached(w, r)
+			w.Header().Add("Content-Type", lmt.GetMessageContentType())
+			w.WriteHeader(lmt.GetStatusCode())
+			w.Write([]byte(lmt.GetMessage()))
+			return
+		}
+		// There's no rate-limit error, serve the next handler.
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(middle)
 }
 
 func (mux *LServeMux) Handler(path string, qps float64, h http.Handler) {
@@ -35,11 +53,11 @@ func (mux *LServeMux) Handler(path string, qps float64, h http.Handler) {
 	}
 
 	if h == nil {
-		mux.m[regexp.MustCompile(path)] = tollbooth.LimitHandler(tollbooth.NewLimiter(qps, nil), mux.rp)
+		mux.m[regexp.MustCompile(path)] = LimitHandler(path, tollbooth.NewLimiter(qps, nil), mux.rp)
 		return
 	}
 
-	mux.m[regexp.MustCompile(path)] = tollbooth.LimitHandler(tollbooth.NewLimiter(qps, nil), h)
+	mux.m[regexp.MustCompile(path)] = LimitHandler(path, tollbooth.NewLimiter(qps, nil), h)
 
 }
 
