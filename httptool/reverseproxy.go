@@ -40,7 +40,8 @@ func LimitHandler(path string, lmt *limiter.Limiter, next http.Handler) http.Han
 	return http.HandlerFunc(middle)
 }
 
-func (mux *LServeMux) Handler(path string, qps float64, h http.Handler) {
+// path 路径模式支持正则  qps qps上限制  自定义handler，nil会直接使用默认代理
+func (mux *LServeMux) Handler(path string, qps float64, code int, msg string, h http.Handler) {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
 
@@ -52,12 +53,16 @@ func (mux *LServeMux) Handler(path string, qps float64, h http.Handler) {
 		mux.m = make(map[*regexp.Regexp]http.Handler)
 	}
 
+	limt := tollbooth.NewLimiter(qps, nil)
+	limt.SetMessage(msg).SetStatusCode(code)
+
 	if h == nil {
-		mux.m[regexp.MustCompile(path)] = LimitHandler(path, tollbooth.NewLimiter(qps, nil), mux.rp)
+
+		mux.m[regexp.MustCompile(path)] = LimitHandler(path, limt, mux.rp)
 		return
 	}
 
-	mux.m[regexp.MustCompile(path)] = LimitHandler(path, tollbooth.NewLimiter(qps, nil), h)
+	mux.m[regexp.MustCompile(path)] = LimitHandler(path, limt, h)
 
 }
 

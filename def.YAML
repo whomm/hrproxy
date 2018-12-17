@@ -1,0 +1,15 @@
+#配置 
+# listen本地监听； 
+# backservices 后端服务器列表逗号分隔；
+# limitlist： 限流列表
+#    path 路径正则； 
+#    qps 最大并发； 
+#    code qps达到上线后的httpcode；
+#    msg qps超限的http content 
+listen: 127.0.0.1:8099
+backservices: http://127.0.0.1:9200,http://127.0.0.1:9200
+limitlist:
+  - path: ^.*/_bulk/?.*$
+    qps: 100 
+    code: 429
+    msg: You have reached maximum request limit.
