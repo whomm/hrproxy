@@ -7,9 +7,9 @@ A http reverse proxy with qps limitation by uri pattern
 ## Versions
     1. 第一个版本写完了，设置配置文件就可以快速使用
 ## Five Minute Tutorial
-    ```bash
+    
     ./hrproxy -c def.YAML
-    ```
+    
 ## Features
     1. 快速构建反向代理服务
     2. 对特定访问url请求模式进行限流
